@@ -1,0 +1,44 @@
+# ASP.NET
+# Build and test ASP.NET projects.
+# Add steps that publish symbols, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
+
+trigger:
+- master
+
+pool:
+  vmImage: 'vs2017-win2016'
+
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+- task: NuGetToolInstaller@1
+
+- task: SonarQubePrepare@4
+  inputs:
+    SonarQube: 'SonarQube'
+    scannerMode: 'MSBuild'
+    projectKey: 'Az'
+
+- task: NuGetCommand@2
+  inputs:
+    command: 'restore'
+    restoreSolution: '**/packages.config'
+    restoreDirectory: './packages'
+    feedsToUse: 'select'
+
+- task: MSBuild@1
+  inputs:
+    solution: '**/*.csproj'
+    
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |      
+      ./bin/Debug/4TellPipelineAutomationTestConsoleApp
+  
+- task: SonarQubeAnalyze@4
